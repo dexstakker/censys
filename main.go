@@ -8,19 +8,15 @@ import (
 	"net"
 )
 
-func main() {
-	fmt.Println("Hello World Eater Galactus")
+func probeForSQL(host string, port string) {
+	fullStr := host + ":" + port
 	// Connect to the server
-	conn, err := net.Dial("tcp", "localhost:3306")
+	conn, err := net.Dial("tcp", fullStr)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("PROBLEM connecting to " + fullStr)
 		return
 	}
-	fmt.Println("Port 3306 is open.\n\n")
-
-	// if err = conn.SetReadDeadline(time.Now().Add(timeout)); err != nil {
-	// 	return
-	// }
+	fmt.Println("Port 3306 is now open.\n\n")
 
 	lenBuf := make([]byte, 4)
 	_, err = conn.Read(lenBuf)
@@ -42,11 +38,6 @@ func main() {
 		return
 	}
 
-	// result, err := parseHandshake(buf)
-	// if err != nil {
-	// 	return
-	// }
-
 	// NOTE: We have byte array and need to pull Handshake protocol from it
 	currlen := len(buf)
 	if currlen == 0 {
@@ -58,6 +49,20 @@ func main() {
 
 	if handshakeVersion == 10 {
 		//fmt.Println("Handshake Version TEN")
+		var version []byte
+		i := 1
+		for _, v := range buf[i:] {
+			if v != 0 {
+				version = append(version, v)
+			} else {
+				i++
+				break
+			}
+			i++
+		}
+
+		versionStr := string(buf[1:i])
+		fmt.Println("Server Version Number: ", versionStr)
 
 	} else if handshakeVersion == 9 {
 		fmt.Println("Handshake Version NINE")
@@ -80,4 +85,9 @@ func msgLength(b []byte) (int32, error) {
 	err := binary.Read(buf, binary.LittleEndian, &result)
 
 	return result, err
+}
+
+func main() {
+	fmt.Println("Hello World Eater Galactus")
+	probeForSQL("localhost", "3307")
 }
