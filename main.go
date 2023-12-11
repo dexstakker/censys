@@ -6,17 +6,19 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
+	"strconv"
 )
 
 func probeForSQL(host string, port string) {
 	fullStr := host + ":" + port
-	// Connect to the server
+	// Feel for the server
 	conn, err := net.Dial("tcp", fullStr)
 	if err != nil {
 		fmt.Println("PROBLEM connecting to " + fullStr)
 		return
 	}
-	fmt.Println("Port 3306 is now open.\n\n")
+	fmt.Println("Port " + port + " is being open and being probed.\n\n")
 
 	lenBuf := make([]byte, 4)
 	_, err = conn.Read(lenBuf)
@@ -88,6 +90,16 @@ func msgLength(b []byte) (int32, error) {
 }
 
 func main() {
-	fmt.Println("Hello World Eater Galactus")
-	probeForSQL("localhost", "3307")
+	args := os.Args[1:]
+	if len(args) != 2 {
+		fmt.Println("Malformed command use for probe")
+	}
+	hostName := args[0]
+	portName := args[1]
+	if portNum, err := strconv.Atoi(portName); err == nil {
+		if portNum < 0 || portNum > 65535 {
+			fmt.Println("Illegal port number: ", portName)
+		}
+		probeForSQL(hostName, portName)
+	}
 }
